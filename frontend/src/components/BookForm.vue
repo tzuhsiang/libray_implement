@@ -1,6 +1,18 @@
 <template>
-  <div class="bg-white rounded-lg shadow-lg p-6">
-    <h2 class="text-xl font-semibold text-gray-800 mb-4">➕ 新增書籍</h2>
+  <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+    <div v-if="!isExpanded" class="flex justify-center">
+      <button @click="isExpanded = true" class="w-full md:w-auto px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-md transition-all flex items-center justify-center space-x-2">
+        <span class="text-xl">➕</span>
+        <span>新增書籍</span>
+      </button>
+    </div>
+    <div v-else class="transition-all duration-300 ease-in-out">
+      <div class="flex justify-between items-center mb-4 border-b pb-2">
+        <h2 class="text-xl font-semibold text-gray-800">➕ 新增書籍</h2>
+        <button @click="isExpanded = false" class="text-gray-500 hover:text-gray-700">
+          ✕ 取消
+        </button>
+      </div>
     <form @submit.prevent="addBook" class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -26,6 +38,7 @@
       </div>
       <button type="submit" class="w-full md:w-auto px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors">新增書籍</button>
     </form>
+    </div>
   </div>
 </template>
 <script>
@@ -35,11 +48,13 @@ export default {
   name: 'BookForm',
   emits: ['book-added'],
   setup(props, { emit }) {
+    const isExpanded = ref(false)
     const form = ref({ title: '', author: '', status: 'unread', rating: 0 })
     const addBook = async () => {
       try {
         await axios.post('/books', form.value)
         form.value = { title: '', author: '', status: 'unread', rating: 0 }
+        isExpanded.value = false
         emit('book-added')
         alert('書籍新增成功！')
       } catch (error) {
@@ -47,7 +62,7 @@ export default {
         alert('新增書籍失敗，請稍後再試')
       }
     }
-    return { form, addBook }
+    return { form, addBook, isExpanded }
   }
 }
 </script>
