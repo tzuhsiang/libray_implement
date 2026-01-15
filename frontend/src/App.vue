@@ -24,7 +24,7 @@
           <div class="text-3xl font-bold text-green-600">{{ finishedCount }}</div>
         </div>
       </div>
-      <BookList :books="books" @book-updated="fetchBooks" @book-deleted="fetchBooks" />
+      <BookList :books="books" @book-deleted="fetchBooks" />
     </main>
   </div>
 </template>
