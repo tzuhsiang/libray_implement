@@ -29,4 +29,3 @@ dist/
 # Database
 *.db
 *.sqlite
-test
