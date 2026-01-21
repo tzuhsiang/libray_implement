@@ -75,5 +75,26 @@ def delete_book(book_id: int, db: Session = Depends(get_db)):
     return None
 
 
+class ChatRequest(schemas.BaseModel): # schemas usually has Pydantic models, or standard import
+    message: str
+
+class ChatResponse(schemas.BaseModel):
+    reply: str
+
+import agent
+
+@app.post("/chat", response_model=ChatResponse)
+async def chat_endpoint(request: ChatRequest):
+    """跟 Agent 對話"""
+    # Simply call the agent function. 
+    # Note: agent.process_message spawns a subprocess each time. 
+    # For a high traffic app this is bad, but for this task/demo it's fine.
+    try:
+        reply = await agent.process_message(request.message)
+        return ChatResponse(reply=reply)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

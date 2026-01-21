@@ -26,6 +26,7 @@
       </div>
       <BookList :books="books" @book-deleted="fetchBooks" />
     </main>
+    <ChatWindow @chat-updated="fetchBooks" />
   </div>
 </template>
 <script>
@@ -33,9 +34,10 @@ import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import BookForm from './components/BookForm.vue'
 import BookList from './components/BookList.vue'
+import ChatWindow from './components/ChatWindow.vue'
 export default {
   name: 'App',
-  components: { BookForm, BookList },
+  components: { BookForm, BookList, ChatWindow },
   setup() {
     const books = ref([])
     const readingCount = computed(() => books.value.filter(book => book.status === 'reading').length)
