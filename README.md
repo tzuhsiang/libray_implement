@@ -34,7 +34,7 @@
 ### 後端 (Backend)
 - **框架**: FastAPI (Python 3.12+)
 - **AI Agent**: Pydantic AI
-- **工具協定**: Model Context Protocol (MCP) by Anthropic
+- **工具協定**: Model Context Protocol (MCP) by Anthropic (符合 MCP Skills 規範)
 - **LLM**: Azure OpenAI (GPT-4o)
 - **ORM**: SQLAlchemy
 - **資料驗證**: Pydantic
@@ -62,6 +62,10 @@ libray_implement/
 │   ├── database.py         # 資料庫連線配置
 │   ├── crud.py             # CRUD 操作邏輯
 │   ├── requirements.txt    # Python 依賴套件
+│   ├── SKILL.md            # MCP Skill 定義文件 [NEW]
+│   ├── examples/           # 使用範例目錄 [NEW]
+│   │   └── USAGE_EXAMPLES.md
+│   ├── scripts/            # 腳本目錄 [NEW]
 │   └── Dockerfile          # 後端容器映像檔
 ├── frontend/               # Vue.js 前端
 │   ├── src/
