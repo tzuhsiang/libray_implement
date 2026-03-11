@@ -1,4 +1,3 @@
-
 services:
   # PostgreSQL 資料庫服務
   db:
@@ -13,7 +12,7 @@ services:
     networks:
       - libriflow_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -44,6 +43,33 @@ services:
     networks:
       - libriflow_network
     command: uvicorn main:app --host ${BACKEND_HOST:-0.0.0.0} --port 8000 --reload
+
+  # MCP Server 服務 (提供外部 Agent 存取 skills)
+  mcp_server:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        - HTTP_PROXY=${HTTP_PROXY}
+        - HTTPS_PROXY=${HTTPS_PROXY}
+        - NO_PROXY=${NO_PROXY}
+    container_name: libriflow_mcp
+    env_file:
+      - ./envs/.env
+    environment:
+      - HTTP_PROXY=${HTTP_PROXY}
+      - HTTPS_PROXY=${HTTPS_PROXY}
+      - NO_PROXY=${NO_PROXY}
+    command: python mcp_server.py
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - libriflow_network
 
   # Vue.js 前端服務
   frontend:

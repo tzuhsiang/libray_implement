@@ -1,22 +1,23 @@
 <template>
-  <div class="fixed bottom-4 right-4 z-50">
+  <div>
     <!-- Chat Button -->
-    <button
-      v-if="!isOpen"
-      @click="toggleChat"
-      class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-4 shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-      </svg>
-    </button>
+    <div class="fixed bottom-4 right-4 z-50">
+      <button
+        v-if="!isOpen"
+        @click="toggleChat"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full p-4 shadow-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+        </svg>
+      </button>
+    </div>
 
-    <!-- Chat Window -->
-    <transition name="fade">
+    <!-- Chat Window Side Panel -->
+    <transition name="slide-right">
       <div
         v-if="isOpen"
-        class="bg-white rounded-lg shadow-2xl w-[90vw] sm:w-[48rem] flex flex-col overflow-hidden border border-gray-200"
-        style="height: 800px; max-height: 90vh;"
+        class="fixed top-0 right-0 h-screen w-full sm:w-[33.333333%] bg-white shadow-2xl flex flex-col overflow-hidden border-l border-gray-200 z-[60]"
       >
         <div class="bg-indigo-600 p-4 flex justify-between items-center text-white">
             <span class="text-xl">🤖</span>
@@ -77,14 +78,19 @@
 </template>
 
 <script>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, watch } from 'vue'
 import axios from 'axios'
 
 export default {
   name: 'ChatWindow',
-  emits: ['chat-updated'],
+  props: {
+    isOpen: {
+      type: Boolean,
+      default: false
+    }
+  },
+  emits: ['chat-updated', 'toggle-chat'],
   setup(props, { emit }) {
-    const isOpen = ref(false)
     const inputMessage = ref('')
     const messages = ref([
       { 
@@ -97,11 +103,15 @@ export default {
     const messagesRef = ref(null)
 
     const toggleChat = () => {
-      isOpen.value = !isOpen.value
-      if (isOpen.value) {
+      emit('toggle-chat')
+    }
+
+    // Watch for isOpen to auto-scroll when opened
+    watch(() => props.isOpen, (newVal) => {
+      if (newVal) {
         scrollToBottom()
       }
-    }
+    })
 
     const scrollToBottom = async () => {
       await nextTick()
@@ -155,20 +165,20 @@ export default {
       }
     }
 
-    return { isOpen, inputMessage, messages, isLoading, toggleChat, sendMessage, messagesRef, resetChat }
+    return { inputMessage, messages, isLoading, toggleChat, sendMessage, messagesRef, resetChat }
   }
 }
 </script>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
 }
 
-.fade-enter-from,
-.fade-leave-to {
+.slide-right-enter-from,
+.slide-right-leave-to {
+  transform: translateX(100%);
   opacity: 0;
-  transform: translateY(20px);
 }
 </style>

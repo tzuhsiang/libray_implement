@@ -1,12 +1,11 @@
 import os
 import asyncio
 from dataclasses import dataclass
-from mcp import StdioServerParameters, ClientSession
-from mcp.client.stdio import stdio_client
+from mcp import ClientSession
+from mcp.client.streamable_http import streamable_http_client
 from pydantic_ai import Agent, RunContext
 import nest_asyncio
 
-# Apply nest_asyncio to allow nested event loops if needed
 nest_asyncio.apply()
 
 @dataclass
@@ -14,8 +13,6 @@ class McpDeps:
     session: ClientSession
 
 # Initialize Agent
-# Ensure env vars for Azure OpenAI are set (AZURE_OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_VERSION)
-# The model name is passed in the constructor.
 agent = Agent(
     f'azure:{os.getenv("AZURE_DEPLOYMENT_NAME", "gpt-4o")}',
     deps_type=McpDeps,
@@ -69,18 +66,14 @@ async def update_book_status(ctx: RunContext[McpDeps], book_id: int, status: str
     return result.content[0].text
 
 async def process_message(user_message: str):
-    server_script = os.path.join(os.path.dirname(__file__), "mcp_server.py")
+    # 連接到 MCP Server 的 HTTP 端點 (Docker 內部使用服務名稱 mcp_server)
+    url = "http://mcp_server:8001/mcp"
     
-    server_params = StdioServerParameters(
-        command="python",
-        args=[server_script],
-        env=os.environ.copy()
-    )
-
-    async with stdio_client(server_params) as (read, write):
+    async with streamable_http_client(url) as (read, write, _):
         async with ClientSession(read, write) as session:
             await session.initialize()
-            
+
             deps = McpDeps(session=session)
             result = await agent.run(user_message, deps=deps)
             return result.output
+

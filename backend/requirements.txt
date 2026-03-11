@@ -4,7 +4,8 @@ sqlalchemy
 psycopg2-binary
 pydantic
 python-dotenv
-mcp
+mcp>=1.2.0
+fastmcp
 openai
-pydantic-ai
+pydantic-ai[openai]>=0.18.0
 nest_asyncio

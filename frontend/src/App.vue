@@ -1,5 +1,8 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+  <div 
+    class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 transition-all duration-300 ease-in-out"
+    :class="{ 'pr-0 sm:pr-[33.333333%]': isChatOpen }"
+  >
     <header class="bg-white shadow-md">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <h1 class="text-3xl font-bold text-indigo-600">📚 LibriFlow</h1>
@@ -26,7 +29,11 @@
       </div>
       <BookList :books="books" @book-deleted="fetchBooks" />
     </main>
-    <ChatWindow @chat-updated="fetchBooks" />
+    <ChatWindow 
+      :is-open="isChatOpen" 
+      @toggle-chat="isChatOpen = !isChatOpen"
+      @chat-updated="fetchBooks" 
+    />
   </div>
 </template>
 <script>
@@ -40,6 +47,7 @@ export default {
   components: { BookForm, BookList, ChatWindow },
   setup() {
     const books = ref([])
+    const isChatOpen = ref(false)
     const readingCount = computed(() => books.value.filter(book => book.status === 'reading').length)
     const finishedCount = computed(() => books.value.filter(book => book.status === 'finished').length)
     const fetchBooks = async () => {
@@ -52,7 +60,7 @@ export default {
       }
     }
     onMounted(() => { fetchBooks() })
-    return { books, readingCount, finishedCount, fetchBooks }
+    return { books, readingCount, finishedCount, fetchBooks, isChatOpen }
   }
 }
 </script>

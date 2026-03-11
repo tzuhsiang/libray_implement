@@ -18,26 +18,33 @@
 
 ## 🤖 AI 讀書助理
 
-本專案整合了基於 **Pydantic AI** 與 **MCP Server** 的智能助理，使用者可以透過右下角的對話視窗與 Agent 互動。
+本專案整合了基於 **Pydantic AI** 與 **FastMCP** 的智能助理。助理透過專屬的 `libriflow_manager` Skill 與後端資料庫互動，使用者可以透過右下角的對話視窗進行自然語言管理。
 
 ![LibriFlow Agent UI](imgs/AGENT-UI.png)
 
-### 支援功能
-- **新增書籍**：「幫我新增一本《原子習慣》，作者是詹姆斯·克利爾」
-- **查詢書籍**：「列出我目前正在閱讀的書」
-- **修改狀態**：「把《原子習慣》標記為已讀完」
-- **修改評分**：「給《哈利波特》打 5 顆星」
-- **自動同步**：Agent 操作完成後，畫面會自動更新顯示最新資料
+### 內建工具 (MCP Tools)
+- **`add_book` (新增書籍)**：加入新書並設定初始狀態與評分。
+- **`list_books` (列出書籍)**：分頁查詢目前的藏書清單。
+- **`update_book_status` (修改狀態)**：將書籍標記為 `unread` (未讀)、`reading` (閱讀中) 或 `finished` (已完成)。
+- **`update_book_rating` (修改評分)**：為書籍提供 0-5 顆星的評價。
+- **`delete_book` (刪除書籍)**：從系統中永久移除書籍。
+
+### 互動範例
+- 「幫我新增一本《原子習慣》，作者是詹姆斯·克利爾」
+- 「列出我目前正在閱讀的書」
+- 「把 ID 為 12 的書標記為已讀完」
+- 「給《哈利波特》打 5 顆星」
+- **自動同步**：Agent 操作完成後，UI 會透過事件機制自動更新資料。
 
 ## 🏗️ 技術架構
 
 ### 後端 (Backend)
 - **框架**: FastAPI (Python 3.12+)
 - **AI Agent**: Pydantic AI
-- **工具協定**: Model Context Protocol (MCP) by Anthropic (符合 MCP Skills 規範)
+- **工具協定**: Model Context Protocol (MCP) - 使用 **FastMCP** 實作
 - **LLM**: Azure OpenAI (GPT-4o)
 - **ORM**: SQLAlchemy
-- **資料驗證**: Pydantic
+- **資料驗證**: Pydantic v2
 - **資料庫**: PostgreSQL 15
 
 ### 前端 (Frontend)
@@ -54,32 +61,27 @@
 ```
 libray_implement/
 ├── backend/                 # FastAPI 後端 & AI Agent
-│   ├── main.py             # 應用主入口與路由 (含 Chat Endpoint)
-│   ├── agent.py            # Pydantic AI Agent 定義
-│   ├── mcp_server.py       # MCP Server 工具實作
+│   ├── main.py             # 應用主入口與 Chat API
+│   ├── agent.py            # Pydantic AI Agent & MCP Client 定義
+│   ├── mcp_server.py       # MCP Server (FastMCP) 工具實作
 │   ├── models.py           # SQLAlchemy 資料庫模型
 │   ├── schemas.py          # Pydantic 資料驗證模型
 │   ├── database.py         # 資料庫連線配置
 │   ├── crud.py             # CRUD 操作邏輯
 │   ├── requirements.txt    # Python 依賴套件
-│   ├── SKILL.md            # MCP Skill 定義文件 [NEW]
-│   ├── examples/           # 使用範例目錄 [NEW]
+│   ├── SKILL.md            # MCP Skill 定義文件
+│   ├── examples/           # 使用範例目錄
 │   │   └── USAGE_EXAMPLES.md
-│   ├── scripts/            # 腳本目錄 [NEW]
+│   ├── scripts/            # 輔助腳本
 │   └── Dockerfile          # 後端容器映像檔
 ├── frontend/               # Vue.js 前端
 │   ├── src/
-│   │   ├── components/     # Vue 組件
-│   │   │   ├── ChatWindow.vue  # AI 對話視窗組件
-│   │   │   ├── BookForm.vue    # 新增書籍表單
-│   │   │   └── BookList.vue    # 書籍清單展示
-│   │   ├── App.vue         # 主頁面
+│   │   ├── components/     # Vue 組件 (Chat, BookForm, BookList)
+│   │   ├── App.vue         # 主頁面入口
 │   │   └── ...
 │   └── Dockerfile          # 前端容器映像檔
-├── envs/                   # 環境變數配置
-│   ├── .env                # 環境變數設定檔 (含 Azure OpenAI Key)
-│   └── .env.example        # 環境變數範例檔
-├── docker-compose.yml      # 多容器編排定義
+├── envs/                   # 環境變數配置 (.env.example)
+├── docker-compose.yml      # Docker 多容器編排
 └── README.md              # 專案說明文件
 ```
 
