@@ -4,7 +4,7 @@ import App from './App.vue'
 import './style.css'
 
 // 設定 Axios 基礎 URL
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const apiUrl = import.meta.env.VITE_API_URL === 'http://localhost:8000' ? '/api' : (import.meta.env.VITE_API_URL || '/api')
 axios.defaults.baseURL = apiUrl
 
 // 將 axios 掛載到全域屬性
