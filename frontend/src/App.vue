@@ -4,9 +4,19 @@
     :class="{ 'pr-0 sm:pr-[33.333333%]': isChatOpen }"
   >
     <header class="bg-white shadow-md">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <h1 class="text-3xl font-bold text-indigo-600">📚 LibriFlow</h1>
-        <p class="text-gray-600 mt-1">個人圖書管理系統</p>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
+        <div>
+          <h1 class="text-3xl font-bold text-indigo-600">📚 LibriFlow</h1>
+          <p class="text-gray-600 mt-1">個人圖書管理系統</p>
+        </div>
+        <button 
+          @click="isChatOpen = !isChatOpen"
+          class="flex items-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-4 py-2 rounded-lg transition-colors duration-200 border border-indigo-100 shadow-sm"
+          :class="{ 'ring-2 ring-indigo-500': isChatOpen }"
+        >
+          <span class="text-xl">🤖</span>
+          <span class="hidden sm:inline font-medium">{{ isChatOpen ? '關閉助理' : 'AI 助理' }}</span>
+        </button>
       </div>
     </header>
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

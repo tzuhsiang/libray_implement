@@ -34,7 +34,9 @@
 - 「列出我目前正在閱讀的書」
 - 「把 ID 為 12 的書標記為已讀完」
 - 「給《哈利波特》打 5 顆星」
-- **自動同步**：Agent 操作完成後，UI 會透過事件機制自動更新資料。
+
+> [!TIP]
+> **開發提示**：本專案已處理環境中 Proxy 對內部容器通訊的干擾。Agent 在連接 MCP Server 時會自動略過代理伺服器，並修正 Azure OpenAI 端點格式，確保在企業網路環境下也能穩定運作。
 
 ## 🏗️ 技術架構
 
@@ -68,11 +70,8 @@ libray_implement/
 │   ├── schemas.py          # Pydantic 資料驗證模型
 │   ├── database.py         # 資料庫連線配置
 │   ├── crud.py             # CRUD 操作邏輯
+│   ├── skills.py           # 具體業務邏輯封裝
 │   ├── requirements.txt    # Python 依賴套件
-│   ├── SKILL.md            # MCP Skill 定義文件
-│   ├── examples/           # 使用範例目錄
-│   │   └── USAGE_EXAMPLES.md
-│   ├── scripts/            # 輔助腳本
 │   └── Dockerfile          # 後端容器映像檔
 ├── frontend/               # Vue.js 前端
 │   ├── src/
@@ -104,13 +103,9 @@ cd libray_implement
 ```bash
 cp envs/.env.example envs/.env
 ```
-**重要**：請編輯 `envs/.env`，填入您的 **Azure OpenAI** 相關金鑰，以啟用 AI 功能：
-```env
-AZURE_OPENAI_API_KEY=your_key
-AZURE_OPENAI_ENDPOINT=your_endpoint
-AZURE_OPENAI_API_VERSION=2024-02-15-preview
-AZURE_DEPLOYMENT_NAME=gpt-4o
-```
+**重要**：請編輯 `envs/.env`，填入您的 **Azure OpenAI** 相關金鑰：
+- `AZURE_OPENAI_ENDPOINT` 請優先填寫 Base URL (例如 `https://xxx.openai.azure.com/`)。
+- 專案已內建邏輯自動清理重複的路徑部分。
 
 3. **啟動所有服務**
 ```bash
@@ -146,6 +141,10 @@ docker compose up --build
 
 ## 🛠️ 開發與除錯
 
+- **Proxy 注意事項**：若在有代理伺服器的環境下使用 `curl` 測試，請加上 `--noproxy '*'`：
+  ```bash
+  curl --noproxy '*' -X POST -H "Content-Type: application/json" -d '{"message": "hi"}' http://localhost:8000/chat
+  ```
 - 查看後端日誌 (包含 Agent 思考過程)：
 ```bash
 docker compose logs -f backend
