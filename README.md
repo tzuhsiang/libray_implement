@@ -8,6 +8,7 @@
 
 - ✨ **現代化 UI** - 使用 Vue 3 Composition API 和 Tailwind CSS 打造美觀的響應式介面
 - 🤖 **AI 智慧助理** - 內建交談式 Agent，可透過自然語言進行書籍管理操作
+- ⚡ **即時動態思維鏈 (CoT)** - 支援 Server-Sent Events (SSE) 串流，即時顯示 AI 的推理與工具呼叫過程
 - 📖 **完整的 CRUD 操作** - 新增、查看、更新和刪除書籍
 - ⭐ **互動式評分系統** - 點擊星星直接為書籍評分，即時回饋
 - 📊 **閱讀狀態追蹤** - 視覺化的狀態標籤（未讀、閱讀中、已完成）
@@ -42,6 +43,7 @@
 
 ### 後端 (Backend)
 - **框架**: FastAPI (Python 3.12+)
+- **串流傳輸**: Server-Sent Events (SSE)
 - **AI Agent**: Pydantic AI
 - **工具協定**: Model Context Protocol (MCP) - 使用 **FastMCP** 實作
 - **LLM**: Azure OpenAI (GPT-4o)
@@ -134,7 +136,7 @@ docker compose up --build
 
 | 方法 | 路徑 | 說明 |
 |------|------|------|
-| POST | `/chat` | 與 AI Agent 對話 |
+| POST | `/chat` | 與 AI Agent 對話 (SSE 串流回覆) |
 | GET | `/books` | 取得書籍清單 |
 | POST | `/books` | 新增書籍 |
 | ... | ... | ... |
