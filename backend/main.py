@@ -85,17 +85,22 @@ class ChatRequest(schemas.BaseModel): # schemas usually has Pydantic models, or 
 class ChatResponse(schemas.BaseModel):
     reply: str
 
+from fastapi.responses import StreamingResponse
 import agent
 
-@app.post("/chat", response_model=ChatResponse)
+@app.post("/chat")
 async def chat_endpoint(request: ChatRequest):
-    """跟 Agent 對話"""
-    # Simply call the agent function. 
-    # Note: agent.process_message spawns a subprocess each time. 
-    # For a high traffic app this is bad, but for this task/demo it's fine.
+    """跟 Agent 對話 (使用 SSE 串流回覆)"""
     try:
-        reply = await agent.process_message(request.message)
-        return ChatResponse(reply=reply)
+        return StreamingResponse(
+            agent.stream_message(request.message),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no"
+            }
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

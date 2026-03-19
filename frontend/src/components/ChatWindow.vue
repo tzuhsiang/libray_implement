@@ -27,6 +27,28 @@
         <div class="flex-1 p-4 overflow-y-auto bg-gray-50" ref="messagesRef">
           <div v-for="(msg, index) in messages" :key="index" class="mb-4 flex flex-col">
             <div :class="['max-w-[85%] rounded-2xl p-3 px-4', msg.role === 'user' ? 'bg-indigo-600 ml-auto text-white rounded-tr-none' : 'bg-white mr-auto text-gray-800 shadow-sm border border-gray-100 rounded-tl-none']">
+              
+              <!-- Thought Process Block for AI -->
+              <div v-if="msg.thoughts && msg.thoughts.length > 0" class="mb-3">
+                <details class="text-sm text-gray-500 bg-gray-50 rounded-lg p-2 border border-gray-100">
+                  <summary class="cursor-pointer font-medium flex items-center gap-1 select-none">
+                    <span v-if="msg.status === 'thinking'" class="animate-spin text-indigo-500 inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-1"></span>
+                    <span v-else>💡</span>
+                    {{ msg.status === 'thinking' ? '思考與執行中...' : '已完成的工作流程' }}
+                  </summary>
+                  <ul class="mt-2 space-y-2">
+                    <li v-for="thought in msg.thoughts" :key="thought.name" class="flex flex-col gap-1 border-l-2 border-indigo-200 pl-2 ml-1">
+                      <div class="flex items-center gap-2">
+                         <span v-if="thought.status === 'pending'" class="animate-spin text-indigo-500 inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full"></span>
+                         <span v-else-if="thought.status === 'success'" class="text-green-500">✓</span>
+                         <span class="font-mono text-xs text-indigo-700 font-semibold px-1 bg-indigo-50 rounded">🛠️ {{ thought.name }}</span>
+                      </div>
+                      <span v-if="thought.status === 'pending'" class="text-xs text-gray-400">執行中...</span>
+                    </li>
+                  </ul>
+                </details>
+              </div>
+
               <p class="whitespace-pre-wrap leading-relaxed">{{ msg.content }}</p>
             </div>
             <span :class="['text-xs text-gray-400 mt-1', msg.role === 'user' ? 'text-right' : 'text-left']">{{ msg.time }}</span>
@@ -84,6 +106,8 @@ export default {
       { 
         role: 'assistant', 
         content: '您好！我是您的圖書管理助理。您可以請我幫忙新增、查詢或修改書籍。',
+        thoughts: [],
+        status: 'done',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
     ])
@@ -113,6 +137,8 @@ export default {
         { 
           role: 'assistant', 
           content: '您好！我是您的圖書管理助理。您可以請我幫忙新增、查詢或修改書籍。',
+          thoughts: [],
+          status: 'done',
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]
@@ -131,25 +157,104 @@ export default {
       isLoading.value = true
       scrollToBottom()
 
+      const assistantMsg = {
+        role: 'assistant',
+        content: '',
+        thoughts: [],
+        status: 'thinking',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+      messages.value.push(assistantMsg)
+
       try {
-        const response = await axios.post('/chat', { message: userMsg })
-        messages.value.push({ 
-          role: 'assistant', 
-          content: response.data.reply,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        })
-        // Notify parent to refresh books
-        emit('chat-updated')
+        const apiUrl = import.meta.env.VITE_API_URL === 'http://localhost:8000' ? '/api' : (import.meta.env.VITE_API_URL || '/api');
+        const response = await fetch(`${apiUrl}/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ message: userMsg })
+        });
+
+        if (!response.ok) {
+           throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder('utf-8');
+        let done = false;
+        let buffer = '';
+
+        while (!done) {
+          const { value, done: readerDone } = await reader.read();
+          done = readerDone;
+          
+          if (value) {
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n\n');
+            buffer = lines.pop() || ''; // Keep incomplete part in buffer
+            
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const dataStr = line.substring(6); // remove 'data: '
+                try {
+                  const event = JSON.parse(dataStr);
+                  
+                  if (event.type === 'agent_start') {
+                    // Start the thought process block immediately with a generic analysis task
+                    assistantMsg.thoughts.push({
+                      name: '分析任務與意圖',
+                      args: {},
+                      status: 'pending'
+                    });
+                  } else if (event.type === 'tool_start') {
+                    // Mark analysis as successful once concrete tools start
+                    const firstThought = assistantMsg.thoughts.find(t => t.name === '分析任務與意圖' && t.status === 'pending');
+                    if (firstThought) firstThought.status = 'success';
+
+                    assistantMsg.thoughts.push({
+                      name: event.name,
+                      args: event.args,
+                      status: 'pending'
+                    });
+                  } else if (event.type === 'tool_end') {
+                    const thoughtReversed = [...assistantMsg.thoughts].reverse();
+                    const pendingThought = thoughtReversed.find(t => t.name === event.name && t.status === 'pending');
+                    if (pendingThought) {
+                      pendingThought.status = event.result === 'success' ? 'success' : 'error';
+                    }
+                    
+                    if (['add_book', 'delete_book', 'update_book_rating', 'update_book_status'].includes(event.name)) {
+                      emit('chat-updated');
+                    }
+                  } else if (event.type === 'message_chunk') {
+                    // Ensure analysis is resolved if no tools were called
+                    const firstThought = assistantMsg.thoughts.find(t => t.name === '分析任務與意圖' && t.status === 'pending');
+                    if (firstThought) firstThought.status = 'success';
+
+                    assistantMsg.content += event.content || '';
+                  } else if (event.type === 'done' || event.type === 'error') {
+                    const firstThought = assistantMsg.thoughts.find(t => t.name === '分析任務與意圖' && t.status === 'pending');
+                    if (firstThought) firstThought.status = 'success';
+                    assistantMsg.status = 'done';
+                  }
+                  
+                  scrollToBottom();
+                } catch (e) {
+                  console.error('Error parsing SSE event:', e, dataStr);
+                }
+              }
+            }
+          }
+        }
       } catch (error) {
-        console.error('Chat error:', error)
-        messages.value.push({ 
-          role: 'assistant', 
-          content: '抱歉，發生錯誤，請稍後再試。',
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        })
+        console.error('Chat error:', error);
+        assistantMsg.content += '\n\n[系統連線異常，請稍後再試。]';
+        assistantMsg.status = 'done';
       } finally {
-        isLoading.value = false
-        scrollToBottom()
+        assistantMsg.status = 'done';
+        isLoading.value = false;
+        scrollToBottom();
       }
     }
 

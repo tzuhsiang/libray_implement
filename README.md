@@ -1,6 +1,6 @@
 # 📚 LibriFlow - 個人圖書管理系統
 
-一個基於 **FastAPI**、**Vue.js 3** 和 **PostgreSQL** 的全端圖書管理應用，整合 **AI Agent** 與 **MCP (Model Context Protocol)** 技術，提供智能化的語音/文字互動管理功能。
+一個基於 **FastAPI**、**Vue.js 3** 和 **PostgreSQL** 的全端圖書管理應用，整合 **AI Agent** 與 **MCP (Model Context Protocol)** 技術，提供智慧化的語音/文字互動管理功能。
 
 ![LibriFlow UI](imgs/UI.png)
 
@@ -8,6 +8,7 @@
 
 - ✨ **現代化 UI** - 使用 Vue 3 Composition API 和 Tailwind CSS 打造美觀的響應式介面
 - 🤖 **AI 智慧助理** - 內建交談式 Agent，可透過自然語言進行書籍管理操作
+- ⚡ **即時動態思維鏈 (CoT)** - 支援 Server-Sent Events (SSE) 串流，即時顯示 AI 的推理與工具呼叫過程
 - 📖 **完整的 CRUD 操作** - 新增、查看、更新和刪除書籍
 - ⭐ **互動式評分系統** - 點擊星星直接為書籍評分，即時回饋
 - 📊 **閱讀狀態追蹤** - 視覺化的狀態標籤（未讀、閱讀中、已完成）
@@ -18,7 +19,7 @@
 
 ## 🤖 AI 讀書助理
 
-本專案整合了基於 **Pydantic AI** 與 **FastMCP** 的智能助理。助理透過專屬的 `libriflow_manager` Skill 與後端資料庫互動，使用者可以透過右下角的對話視窗進行自然語言管理。
+本專案整合了基於 **Pydantic AI** 與 **FastMCP** 的智慧助理。助理透過專屬的 `libriflow_manager` Skill 與後端資料庫互動，使用者可以透過右側的對話視窗進行自然語言管理。
 
 ![LibriFlow Agent UI](imgs/AGENT-UI.png)
 
@@ -42,6 +43,7 @@
 
 ### 後端 (Backend)
 - **框架**: FastAPI (Python 3.12+)
+- **串流傳輸**: Server-Sent Events (SSE)
 - **AI Agent**: Pydantic AI
 - **工具協定**: Model Context Protocol (MCP) - 使用 **FastMCP** 實作
 - **LLM**: Azure OpenAI (GPT-4o)
@@ -68,10 +70,10 @@ libray_implement/
 │   ├── mcp_server.py       # MCP Server (FastMCP) 工具實作
 │   ├── models.py           # SQLAlchemy 資料庫模型
 │   ├── schemas.py          # Pydantic 資料驗證模型
-│   ├── database.py         # 資料庫連線配置
+│   ├── database.py         # 資料庫連線設定
 │   ├── crud.py             # CRUD 操作邏輯
 │   ├── skills.py           # 具體業務邏輯封裝
-│   ├── requirements.txt    # Python 依賴套件
+│   ├── requirements.txt    # Python 相依套件
 │   └── Dockerfile          # 後端容器映像檔
 ├── frontend/               # Vue.js 前端
 │   ├── src/
@@ -79,7 +81,7 @@ libray_implement/
 │   │   ├── App.vue         # 主頁面入口
 │   │   └── ...
 │   └── Dockerfile          # 前端容器映像檔
-├── envs/                   # 環境變數配置 (.env.example)
+├── envs/                   # 環境變數設定 (.env.example)
 ├── docker-compose.yml      # Docker 多容器編排
 └── README.md              # 專案說明文件
 ```
@@ -93,13 +95,13 @@ libray_implement/
 
 ### 安裝步驟
 
-1. **克隆專案**
+1. **複製專案 (Clone)**
 ```bash
 git clone https://github.com/tzuhsiang/libray_implement.git
 cd libray_implement
 ```
 
-2. **配置環境變數**
+2. **設定環境變數**
 ```bash
 cp envs/.env.example envs/.env
 ```
@@ -112,9 +114,9 @@ cp envs/.env.example envs/.env
 docker compose up --build
 ```
 
-### 訪問應用
+### 瀏覽應用程式
 
-- 🌐 **前端界面**: http://localhost:5173
+- 🌐 **前端介面**: http://localhost:5173
 - 🔧 **後端 API**: http://localhost:8000
 - 📚 **API 文件**: http://localhost:8000/docs
 
@@ -134,7 +136,7 @@ docker compose up --build
 
 | 方法 | 路徑 | 說明 |
 |------|------|------|
-| POST | `/chat` | 與 AI Agent 對話 |
+| POST | `/chat` | 與 AI Agent 對話 (SSE 串流回覆) |
 | GET | `/books` | 取得書籍清單 |
 | POST | `/books` | 新增書籍 |
 | ... | ... | ... |
@@ -145,7 +147,7 @@ docker compose up --build
   ```bash
   curl --noproxy '*' -X POST -H "Content-Type: application/json" -d '{"message": "hi"}' http://localhost:8000/chat
   ```
-- 查看後端日誌 (包含 Agent 思考過程)：
+- 查看後端系統紀錄 (Log)，包含 Agent 思考過程：
 ```bash
 docker compose logs -f backend
 ```
